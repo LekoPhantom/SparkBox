@@ -60,6 +60,23 @@ extern String bankConfigFile;
 #define PGM_NAME "SparkBox"
 #define VERSION "V1.00" 
 
+//Neopixels
+#include <FastLED.h>
+// How many leds in your strip?
+#define NUM_LEDS 1
+
+// For led chips like WS2812, which have a data line, ground, and power, you just
+// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
+// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
+// Clock pin only needed for SPI based chipsets when not using hardware SPI
+#define DATA_PIN 2
+//#define CLOCK_PIN 13
+
+// Define the array of leds
+CRGB neoLeds[NUM_LEDS];
+
+//Neopixels
+
 extern eMode_t curMode;
 extern eMode_t oldMode;
 extern eMode_t returnMode;
@@ -127,6 +144,13 @@ const uint8_t overlaysCount = 1;
 
 void setup() {
   
+  //Neopixels
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(neoLeds, NUM_LEDS);  // GRB ordering is assumed
+  FastLED.setBrightness(30);
+  // Turn the LED on
+  neoLeds[0] = CRGB( 100, 0, 255);
+  FastLED.show();
+  
   time_to_sleep = millis() + (1000*60); // Preset timeout 
   setCpuFrequencyMhz(180);                      // Hopefully this will let the battery last a bit longer
   #ifdef DEBUG_ON
@@ -185,7 +209,7 @@ void setup() {
 
   // Initialising the UI will init the display too.
   ui.init();
-  oled.flipScreenVertically();  // This allows to flip all the UI upside down depending on your h/w components palacement
+  //oled.flipScreenVertically();  // This allows to flip all the UI upside down depending on your h/w components palacement
   ESP_on();                     // Show startup animation
   
   // Set pushbutton inputs to pull-downs or pull-ups depending on h/w variant
@@ -294,7 +318,8 @@ void loop() {
     doExpressionPedal();
   }
 #endif //EXPRESSION_PEDAL
-
+  //neopixels
+  doNeoPixels();
   // Process user input
   doPushButtons();
 

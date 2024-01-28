@@ -56,8 +56,8 @@
 //
 // Uncomment if you have leds indicating selected channel
 // #define LEDS_USED
-#define void 
 //
+
 // GPIOs of connected leds
 #ifdef LEDS_USED
 const uint8_t ledPins[]{14,27,26,25};

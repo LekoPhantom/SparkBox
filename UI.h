@@ -214,6 +214,7 @@ String fxCaption=spark_knobs[curFx][curParam];  // Effect caption for displaying
 
 // forward declarations
 void doPushButtons();
+
 void refreshUI();
 void showMessage(const String &capText, const String &text1, const String &text2,  const ulong msTimeout) ;
 void loadConfiguration(const String filename, tBankConfig (&conf)[NUM_BANKS+1]);

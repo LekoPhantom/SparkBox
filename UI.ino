@@ -349,6 +349,24 @@ void changeKnobFx(int changeDirection=1) {
   DEBUG(curKnob);
 }
 
+//Neopixels
+void doNeoPixels(){
+
+if(curMode == MODE_PRESETS) { 
+      if(display_preset_num != active_led_num) {
+        if (active_led_num == 1){
+        neoLeds[0] = CRGB( 0, 0, 255);
+        FastLED.show();
+        } else if (active_led_num == 2){
+          neoLeds[0] = CRGB( 255, 0, 0);
+          FastLED.show();
+        }
+        active_led_num = display_preset_num;
+      } 
+   
+  } 
+}
+
 // Led handling
 bool ledsActive() {
   #ifdef LEDS_USED
@@ -379,7 +397,7 @@ void doLeds() {
     } else {
       if(display_preset_num >= 0) {
         switch_leds_off();
-        active_led_num=-1;
+        active_led_num=-1; 
       }
     }
   }
@@ -527,7 +545,7 @@ void onClick(uint8_t buttonMask) {
       //case 16:// ...
       //case 32:// ...
       //case 64:// any single button click
-      case 128:// ...
+      case 256:// ...
         buttonId = log(buttonMask)/log(2); 
         display_preset_num = buttonId;
         change_hardware_preset(display_preset_num);
