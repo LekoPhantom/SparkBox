@@ -8,7 +8,7 @@
 //
 // Battery charge function defines. Please uncomment just one.
 // You have no mods to monitor the battery, so it will show empty
-//#define BATT_CHECK_0
+#define BATT_CHECK_0
 //
 // You are monitoring the battery via a 2:1 10k/10k resistive divider to GPIO23
 // You can see an accurate representation of the remaining battery charge and a kinda-sorta
@@ -17,7 +17,7 @@
 //
 // You have the battery monitor mod described above AND you have a connection between the 
 // CHRG pin of the charger chip and GPIO 33. Go you! Now you have a guaranteed charge indicator too.
-#define BATT_CHECK_2
+//#define BATT_CHECK_2
 //
 // Expression pedal define. Comment this out if you DO NOT have the expression pedal mod
 #define EXPRESSION_PEDAL
@@ -26,7 +26,7 @@
 //#define DUMP_ON
 //
 // Uncomment for better Bluetooth compatibility with Android devices
-//#define CLASSIC
+#define CLASSIC
 //
 // Uncomment when using a Heltec module as their implementation doesn't support setMTU()
 #define HELTEC_WIFI
@@ -46,16 +46,17 @@
 //
 // Logical level of a button being pressed. If your buttons connect to GND, then comment this setting out.
 // This setting also affects Pull-up/down, and waking source settings. 
-#define ACTIVE_HIGH
+//  #define ACTIVE_HIGH
 //
 // How many pieces do you wish?
 #define NUM_BANKS 12
 //
 // How many switches do we have
-#define NUM_SWITCHES 4
+#define NUM_SWITCHES 8
 //
 // Uncomment if you have leds indicating selected channel
-//#define LEDS_USED
+// #define LEDS_USED
+#define void 
 //
 // GPIOs of connected leds
 #ifdef LEDS_USED
@@ -66,7 +67,10 @@ const uint8_t ledPins[]{14,27,26,25};
 //#define ALTERNATE_CHARGE_AIN
 
 // GPIOs of the buttons in your setup in the form of switchPins[]{GPIO_for_button1, GPIO_for_button2, GPIO_for_button3, GPIO_for_button4, ... }
-const uint8_t switchPins[]{17,5,18,23};                     // Switch gpio numbers (for those who already has built a pedal with these pins)
+const uint8_t switchPins[]{17,5,18,23,33,21,13,12};                     // Switch gpio numbers (for those who already has built a pedal with these pins)
+//Switch pins used in v.995 5,14,17,23,25
+//LED Pins used in v.995 12,13,19,22
+
 //const uint8_t switchPins[]{33,14,27,26};                  // PH EDIT
 //const uint8_t switchPins[]{25,26,27,14};                  // Switch gpio numbers (recommended for those who is building a pedal, these pins allow deep sleep)
 //
@@ -75,7 +79,7 @@ const uint8_t switchPins[]{17,5,18,23};                     // Switch gpio numbe
 //#define ANIMATION_2
 //
 //
-#define SP_AP_NAME "SparkBox"     // WiFi Access Point (AP) name
+#define SP_AP_NAME "Sparklerv2"     // WiFi Access Point (AP) name
 #define SP_AP_IP 192,168,4,1        // IP Address of the web page for setting up WiFi credentials
 //
 #endif
