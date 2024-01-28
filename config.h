@@ -46,7 +46,7 @@
 //
 // Logical level of a button being pressed. If your buttons connect to GND, then comment this setting out.
 // This setting also affects Pull-up/down, and waking source settings. 
-#define ACTIVE_HIGH
+//#define ACTIVE_HIGH
 //
 // How many pieces do you wish?
 #define NUM_BANKS 12
