@@ -524,14 +524,38 @@ void onClick(uint8_t buttonMask) {
       case 2: // button 2
       case 4: // button 3
       case 8: // button 4      
-      case 16:// ...
-      case 32:// ...
-      case 64:// any single button click
+      //case 16:// ...
+      //case 32:// ...
+      //case 64:// any single button click
       case 128:// ...
         buttonId = log(buttonMask)/log(2); 
         display_preset_num = buttonId;
         change_hardware_preset(display_preset_num);
         break;
+
+      //Adding new buttons?
+      case 16: // fx toggle
+        SWITCHES[3].fxOnOff = !SWITCHES[3].fxOnOff;
+        change_generic_onoff(SWITCHES[3].fxSlotNumber, SWITCHES[3]
+        .fxOnOff);
+        setting_modified = true;
+           break;
+
+      case 32: // fx toggle
+      SWITCHES[2].fxOnOff = !SWITCHES[2].fxOnOff;
+        change_generic_onoff(SWITCHES[2].fxSlotNumber, SWITCHES[2]
+        .fxOnOff);
+        setting_modified = true;
+        break;
+
+      case 64:
+          change_comp_param(3, .42);
+        break;
+      case 128://If We Want button 9
+          tuner_on_off(true);
+          
+        break;
+      
       default:
         //no action yet
         break;        
