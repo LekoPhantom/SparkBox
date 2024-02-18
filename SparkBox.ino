@@ -63,7 +63,7 @@ extern String bankConfigFile;
 //Neopixels
 #include <FastLED.h>
 // How many leds in your strip?
-#define NUM_LEDS 1
+#define NUM_LEDS 4
 
 // For led chips like WS2812, which have a data line, ground, and power, you just
 // need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
@@ -142,21 +142,34 @@ const uint8_t overlaysCount = 1;
 
 //******************************************************************************************
 
+
+//neopixel setup
+void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { neoLeds[i].nscale8(250); } }
+
+
+
 void setup() {
-  
-  //Neopixels
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(neoLeds, NUM_LEDS);  // GRB ordering is assumed
-  FastLED.setBrightness(30);
-  // Turn the LED on
-  neoLeds[0] = CRGB( 100, 0, 255);
-  FastLED.show();
-  
+
   time_to_sleep = millis() + (1000*60); // Preset timeout 
   setCpuFrequencyMhz(180);                      // Hopefully this will let the battery last a bit longer
   #ifdef DEBUG_ON
     Serial.begin(115200);                       // Start serial debug console monitoring via ESP32
     while (!Serial);
   #endif
+
+  //Neopixels
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(neoLeds, NUM_LEDS);  // GRB ordering is assumed
+  FastLED.setBrightness(30);
+  FastLED.clear();
+  FastLED.show();
+  Serial.println("led Setup done.  \n");
+
+  InitialLedAnimation();
+	
+	Serial.print("x");
+
+  // End Neopixel setup
+  
   display_preset_num = 0;
   
   // Check FS
@@ -275,6 +288,9 @@ void setup() {
     mainIcons();
     oled.display();
     DEBUG("Scanning and connecting");
+    //doExpressionPedal();
+    DEBUG("hi");
+    
     scan_result = spark_state_tracker_start();
   }
   attempt_count = 0;
@@ -290,12 +306,13 @@ void setup() {
   // Proceed if connected
   ui.switchToFrame(curMode);
   time_to_sleep = millis() + (BT_MAX_ATTEMPTS * MILLIS_PER_ATTEMPT); // Preset timeout 
+  
 }
 
 //******************************************************************************************
 
 void loop() {
-  static ulong tBefore, tAfter;
+   static ulong tBefore, tAfter;
   if(spark_state == SPARK_SYNCED){
     if (!got_presets) {
       // If it's the first run with banks, then save current presets to Bank_000
@@ -314,9 +331,14 @@ void loop() {
   }
 #ifdef EXPRESSION_PEDAL
   // Only handle the pedal if the app is connected
-  if (conn_status[APP]){
+  /**
+  if (conn_status[APP]){ //Originally, Expression only runs with a connected app...
     doExpressionPedal();
   }
+  **/
+
+  
+  doExpressionPedal();
 #endif //EXPRESSION_PEDAL
   //neopixels
   doNeoPixels();
@@ -339,7 +361,7 @@ void loop() {
       DEBUG(sLicense);
       change_hardware_preset(display_preset_num); // Refresh app preset when first connected
     }
-
+   
     // Work out if the user is touching a switch or a knob
     if (cmdsub == 0x0115 || cmdsub == 0x0315){
       expression_target = true;
@@ -353,10 +375,20 @@ void loop() {
     
     // do your own checks and processing here    
     if (cmdsub == 0x0337 || cmdsub == 0x0104) {
-      DEBUG("Change parameter ");
+      DEBUG("Change parameter");
       int fxSlot = fxNumByName(msg.str1).fxSlot;
       presets[CUR_EDITING].effects[fxSlot].Parameters[msg.param1] = msg.val;
       fxCaption = spark_knobs[fxSlot][msg.param1];
+      // Let's read the full message...
+      String fxSlotStr =  String(fxSlot);
+      String messageParamString = String(msg.param1);
+      //lets try to read the message
+      String actualMessage = String(msg.val);
+      DEBUG("The FX that was changed was..." + fxSlotStr);
+      DEBUG("The Paramater that was changed was... " + messageParamString);
+      DEBUG("The Paramater was changed to..." + actualMessage);
+
+
       if (fxSlot==5 && msg.param1==4){
         //suppress the message "BPM=10.0"
       } else {

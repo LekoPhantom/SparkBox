@@ -313,6 +313,12 @@ bool  update_spark_state() {
            DEB("Preset received ");     
            DEBUG(p);
            hw_preset_received = true;
+
+           
+        /**19:40:44.148 -> Change parameter 
+19:40:44.181 -> Message: 328
+19:40:44.181 -> Message: 104
+**/
            
            presets[p].curr_preset = 0;
            presets[p].preset_num = ((p == 4) ? 0x7f : p);  

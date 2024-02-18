@@ -251,10 +251,14 @@ void frTuner(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
     hub_x = (tuner_width/2) - (tuner_width/2/4)*sin(radians(90-val_deg));
     hub_y = (display->height()) - (display->height()/4)*cos(radians(90-val_deg)) ;
     display->drawLine(meter_x+x, meter_y+y, hub_x+x, hub_y+y); // Draw line from hub to meter edge
+    //InTune?
     if (meter_x >= hub_x-1 && meter_x <= hub_x+1) {
       // Fine tune signaling
       display->setColor(INVERSE);
       display->fillRect(0,0,display->width(),STATUS_HEIGHT);  
+      //Let's try setting all LEDs to green if we are mostly in tune
+      SetupPurpleAndGreenPalette();
+      FillLEDsFromPaletteColors(1);
     }
   } else {
     // Nothing to show
@@ -349,22 +353,223 @@ void changeKnobFx(int changeDirection=1) {
   DEBUG(curKnob);
 }
 
+
+//neopixels
+
+static float pulseSpeed = 0.5;  // Larger value gives faster pulse.
+
+uint8_t hueA = 15;  // Start hue at valueMin.
+uint8_t satA = 230;  // Start saturation at valueMin.
+float valueMin = 120.0;  // Pulse minimum value (Should be less then valueMax).
+
+uint8_t hueB = 95;  // End hue at valueMax.
+uint8_t satB = 255;  // End saturation at valueMax.
+float valueMax = 255.0;  // Pulse maximum value (Should be larger then valueMin).
+
+uint8_t hue = hueA;  // Do Not Edit
+uint8_t sat = satA;  // Do Not Edit
+float val2 = valueMin;  // Do Not Edit
+uint8_t hueDelta = hueA - hueB;  // Do Not Edit
+static float delta = (valueMax - valueMin) / 2.35040238;  // Do Not Edit
+
+
+struct CRGB;
+
+#define UPDATES_PER_SECOND 20
+
+TBlendType    currentBlending;
+//The Pallette
+CRGBPalette16 currentPalette;
+
+// FastLED provides several 'preset' palettes: RainbowColors_p, RainbowStripeColors_p,
+// OceanColors_p, CloudColors_p, LavaColors_p, ForestColors_p, and PartyColors_p.
+//
+// Additionally, you can manually define your own color palettes, or you can write
+// code that creates color palettes on the fly.  All are shown here.
+
+
+/**It seems HSV is a better way to work with color than RGB. 
+* This website (https://github.com/FastLED/FastLED/wiki/Pixel-reference#chsv) has some detailed info, but the Cliff's Notes version is here.
+    * (H)ue is the 'angle' around a color wheel
+    * (S)aturation is how 'rich' (versus pale) the color is
+    * (V)alue is how 'bright' (versus dim)
+This means we only need one bit to set the color. In reality, hues are divided into 360 segments. 
+Computers prefer 255, so there is a mapping of cardinal points in the library.
+
+    * Red (0..) "HUE_RED"
+    * Orange (32..) "HUE_ORANGE"
+    * Yellow (64..) "HUE_YELLOW"
+    * Green (96..) "HUE_GREEN"
+    * Aqua (128..) "HUE_AQUA"
+    * Blue (160..) "HUE_BLUE"
+    * Purple (192..) "HUE_PURPLE"
+    * Pink(224..) "HUE_PINK"
+
+* A full chart can be found here (https://raw.githubusercontent.com/FastLED/FastLED/gh-pages/images/HSV-rainbow-with-desc.jpg). 
+* With this value, a totally custom pallette can be created easily. See below.
+* There are also pre-defined colors which can be accessed here (https://github.com/FastLED/FastLED/wiki/Pixel-reference#predefined-colors-list). for those, you can just set the Pallette by calling them directly inline.
+* E.X. customPallette = CRGBPallette16(
+    CRGB::Indigo
+    CRGB::Blue,
+    CRGB::Teal,
+    CRGB::Black);
+**/
+
+void MyCustomPalette()
+{
+    CRGB red = CHSV( 0, 255, 255);
+    CRGB yellow  = CHSV( 64, 255, 255);
+    CRGB aqua    =  CHSV(160, 255, 255);
+    CRGB purple    =  CHSV( 192, 255, 255);
+    CRGB black  = CRGB::Black;
+    //The Pallette is the array. So, you can access the pallette directly by calling customPallette[i]. In this example, customPallette[3] would return aqua.
+    //The pallette does expect 16 colors. At least for now, you can get by with 4, but you cannot do say 5, or even 8.
+    //If you only use four values the array is not consistent. SO, we are going back to defining all 16
+    currentPalette = CRGBPalette16(
+                                   red,  yellow,  aqua,  purple,
+                                    red,  yellow,  aqua,  purple,
+                                     red,  yellow,  aqua,  purple,
+                                      red,  yellow,  aqua,  purple 
+                                   );
+}
+
+void SetupPurpleAndGreenPalette()
+{
+    CRGB purple = CHSV( HUE_PURPLE, 255, 255);
+    CRGB green  = CHSV( HUE_GREEN, 255, 255);
+    CRGB red    =  CHSV( HUE_RED, 255, 255);
+    CRGB black  = CRGB::Black;
+    
+    currentPalette = CRGBPalette16(
+                                   green,  green,  red,  red,
+                                   purple, purple, red,  red,
+                                   green,  green,  red,  red,
+                                   purple, purple, red,  red );
+}
+
+void FillLEDsFromPaletteColors( uint8_t colorIndex)
+{
+    uint8_t brightness = 255;
+    
+    for( int i = 0; i < NUM_LEDS; ++i) {
+        neoLeds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+        colorIndex += 3;
+    }
+}
+
+void InitialLedAnimation(){
+
+  uint8_t animCounter = 0;
+
+  
+   while (animCounter <= (50)) {
+    
+    static uint8_t startIndex = 0;
+    startIndex = startIndex + 1; /* motion speed */
+    SetupPurpleAndGreenPalette(); 
+    currentBlending = LINEARBLEND;
+    FillLEDsFromPaletteColors( startIndex);
+    if (animCounter >= (49)) {
+      for( int i = 0; i < NUM_LEDS; ++i) {
+        neoLeds[i] = currentPalette[3];
+        Serial.println("the strand should be red here");
+    }
+    }
+    FastLED.show();
+    FastLED.delay(1000 / UPDATES_PER_SECOND);
+
+    animCounter ++;
+   }
+
+}
+void switch_neoPixels_off() {
+  FastLED.clear();
+}
+
+void switch_neoPixels_on(int channelNumber) {
+    MyCustomPalette();
+    switch_neoPixels_off();
+    neoLeds[channelNumber] = currentPalette[channelNumber];
+    FastLED.show();
+}
+
 //Neopixels
 void doNeoPixels(){
-
-if(curMode == MODE_PRESETS) { 
+//button logic
+  
+    if(curMode == MODE_PRESETS) { 
       if(display_preset_num != active_led_num) {
-        if (active_led_num == 1){
-        neoLeds[0] = CRGB( 0, 0, 255);
+        switch_neoPixels_on(display_preset_num);
+        active_led_num = display_preset_num;
+      }
+    
+    }
+/**if(curMode == MODE_PRESETS) { 
+  
+
+  //led control version
+  if (ledsActive()){ 
+    if(curMode == MODE_PRESETS) { 
+      if(display_preset_num != active_led_num) {
+        switch_led_on(display_preset_num);
+        active_led_num = display_preset_num;
+      }/
+    } else {
+      if(display_preset_num >= 0) {
+        switch_leds_off();
+        active_led_num=-1; 
+      }
+    }
+  }
+
+  
+      if(display_preset_num != active_led_num) {
+        /**
+        if (active_led_num == 0){
+        FastLED.clear();
+       
+        neoLeds[0] = CRGB( 255, 0, 0);
         FastLED.show();
-        } else if (active_led_num == 2){
-          neoLeds[0] = CRGB( 255, 0, 0);
+        } else if (active_led_num == 1){
+          FastLED.clear();
+          neoLeds[1] = CRGB( 25,30,153);
+          FastLED.show();
+        } else if(active_led_num == 2){
+          FastLED.clear();
+          neoLeds[2] = CRGB( 0,155,0);
+          FastLED.show();
+        } else if (active_led_num == 3){
+          FastLED.clear();
+          neoLeds[3] = CRGB( 0,0,153);
           FastLED.show();
         }
+        
         active_led_num = display_preset_num;
       } 
    
-  } 
+  } else {
+    
+	float dV = ((exp(sin(pulseSpeed * millis()/2000.0*PI)) -0.36787944) * delta);
+  val2 = valueMin + dV;
+  hue = map(val2, valueMin, valueMax, hueA, hueB);  // Map hue based on current val
+  sat = map(val2, valueMin, valueMax, satA, satB);  // Map sat based on current val
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    neoLeds[i] = CHSV(hue, sat, val);
+
+    // You can experiment with commenting out these dim8_video lines
+    // to get a different sort of look.
+    neoLeds[i].r = dim8_video(neoLeds[i].r);
+    neoLeds[i].g = dim8_video(neoLeds[i].g);
+    neoLeds[i].b = dim8_video(neoLeds[i].b);
+  }
+
+  FastLED.show();
+  
+
+  
+  }
+  **/
 }
 
 // Led handling
@@ -418,6 +623,7 @@ void switch_led_on(int pinNumber) {
   }
 }
 #endif
+
 
 // Pushbutton handling
 void doPushButtons(void)
@@ -524,6 +730,11 @@ void doPushButtons(void)
   }
 }
 
+uint8_t expressionParam = 5;
+void SetButton(){
+  expressionParam = Serial.parseInt();
+}
+
 // buttonMask is binary mask that has 1 in Nth position, if Nth button is active, 
 // say 0b00000100 (decimal 4) means that your 3rd button fired this event, multiple buttons allowed
 void onClick(uint8_t buttonMask) {
@@ -552,25 +763,51 @@ void onClick(uint8_t buttonMask) {
         break;
 
       //Adding new buttons?
-      case 16: // fx toggle
-        SWITCHES[3].fxOnOff = !SWITCHES[3].fxOnOff;
+      case 16: // fx toggle Not currently used...
+      //Old Rverb toggle
+        /**SWITCHES[3].fxOnOff = !SWITCHES[3].fxOnOff;
         change_generic_onoff(SWITCHES[3].fxSlotNumber, SWITCHES[3]
         .fxOnOff);
-        setting_modified = true;
+        setting_modified = true;**/
+        // Overdrive toggle
+        //SWITCHES[0].fxOnOff = !SWITCHES[0].fxOnOff; //This should be drive...
+        //change_generic_onoff(SWITCHES[0].fxSlotNumber, SWITCHES[0]
+        //.fxOnOff);
+        //setting_modified = true;
+        
+        change_comp_param(0, 0.00);
+        DEB("We should have just switched to auto wah...");
+        //change_comp_toggle();
+
            break;
 
       case 32: // fx toggle
-      SWITCHES[2].fxOnOff = !SWITCHES[2].fxOnOff;
-        change_generic_onoff(SWITCHES[2].fxSlotNumber, SWITCHES[2]
-        .fxOnOff);
-        setting_modified = true;
+      //Toggle tuner
+      tuner_on_off(true);
+      
         break;
 
       case 64:
-          change_comp_param(3, .42);
+        wah = true;
+        change_comp_param(0, 0.90);
+        DEB("We should be wahing manually...");
+        break;
+
+        /**19:40:44.148 -> Change parameter 
+19:40:44.181 -> Message: 328
+19:40:44.181 -> Message: 104
+**/
         break;
       case 128://If We Want button 9
-          tuner_on_off(true);
+              // Overdrive toggle
+        //SWITCHES[0].fxOnOff = !SWITCHES[0].fxOnOff; //This should be drive...
+        //change_generic_onoff(SWITCHES[0].fxSlotNumber, SWITCHES[0]
+        //.fxOnOff);
+        //setting_modified = true;
+        //change_comp_param(0, 0.00); //gets to auto wah
+        wah=false;
+        DEB("We should be adjusting Volume or parameter");
+          
           
         break;
       
@@ -1232,9 +1469,93 @@ void tunerOff() {
     DEBUG(returnMode);
   }
 }
+// Current New code probably not working
 
 // Function to process an optional expression pedal connected to the EXP_AIN pin.
 // Tip is connected to a pot's slider, sleeve to GND, and ring to 3.3V. Low pedal position = Max Ohmage 
+void doExpressionPedal() {
+  // Read expression pedal
+  // It can be sometimes difficult to get to zero, which we need,
+  // so we subtract an offset and expand the scale to cover the full range
+  express_result = (analogRead(EXP_AIN)/ 45) - 10;
+
+  // Rolling average to remove noise
+  if (express_ring_count < 10) {
+    express_ring_sum += express_result;
+    express_ring_count++;
+    express_result = express_ring_sum / express_ring_count;
+  }
+  // Once enough is gathered, do a decimating average
+  else {
+    express_ring_sum *= 0.9;
+    express_ring_sum += express_result;
+    express_result = express_ring_sum / 10;
+  }  
+
+  // Reduce noise and only respond to deliberate changes
+  if ((abs(express_result - old_exp_result) > 7))
+  {
+    timeToGoBack = millis() + actual_timeout; // It's not idle
+    old_exp_result = express_result;
+    effect_volume = float(express_result);
+    effect_volume = effect_volume / 64;  //<-- This is the Expression result.
+    if (effect_volume > 1.0) effect_volume = 1.0;
+    if (effect_volume < 0.0) effect_volume = 0.0;
+#ifdef DUMP_ON
+    DEB("Pedal data: ");
+    DEB(express_result);
+    DEB(" : ");
+    DEBUG(effect_volume);
+#endif
+    
+    //let's try to commandeer the expression result
+    // Send expression pedal value to Spark and App
+    if (wah == true){
+
+      //change_comp_param(5, effect_volume);
+     
+      change_generic_param(1, 5, effect_volume);
+      // This is how they used to change the parameter.-->//change_generic_param(get_effect_index(msg.str1), msg.param1, effect_volume); // <-- This sends the expression result to the effect paramater
+      DEB("Attempting to wah");
+      fxCaption = "EXPRESSION";
+      level = effect_volume * MAX_LEVEL;     // <-- This may put the the effect level on the screen
+      tempFrame(MODE_LEVEL, curMode, 1000);  
+
+  }
+      
+
+       /**       
+    // If effect on/off
+    if (expression_target) {
+        // Send effect ON state to Spark and App only if OFF   
+        if ((effect_volume > 0.5)&&(!effectstate)) {
+          change_generic_onoff(get_effect_index(msg.str1),true);
+          DEB("Turning effect ");
+          DEB(msg.str1);
+          DEBUG(" ON via pedal");
+          effectstate = true;
+        }
+        // Send effect OFF state to Spark and App only if ON, also add hysteresis
+        else if ((effect_volume < 0.3)&&(effectstate))         {
+          change_generic_onoff(get_effect_index(msg.str1),false);
+          DEB("Turning effect ");
+          DEB(msg.str1);
+          DEBUG(" OFF via pedal");
+          effectstate = false;
+        }
+    }**/
+    // Parameter change
+    else{
+      ///Send expression pedal value to Spark and App
+      change_generic_param(get_effect_index(msg.str1), msg.param1, effect_volume); // <-- This sends the expression result to the effect paramater
+      fxCaption = "EXPRESSION";
+      level = effect_volume * MAX_LEVEL;     // <-- This may put the the effect level on the screen
+      tempFrame(MODE_LEVEL, curMode, 1000);
+    }
+  }
+}
+
+/**
 void doExpressionPedal() {
   // Read expression pedal
   // It can be sometimes difficult to get to zero, which we need,
@@ -1300,6 +1621,7 @@ void doExpressionPedal() {
     }
   }
 }
+**/
 
 // We need to know which effects are on and which are off to draw icons
 void updateFxStatuses() {

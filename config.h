@@ -23,17 +23,17 @@
 #define EXPRESSION_PEDAL
 //
 // Dump preset define. Comment out if you'd prefer to not see so much text output
-//#define DUMP_ON
+#define DUMP_ON
 //
 // Uncomment for better Bluetooth compatibility with Android devices
-#define CLASSIC
+// #define CLASSIC
 //
 // Uncomment when using a Heltec module as their implementation doesn't support setMTU()
 #define HELTEC_WIFI
 //
 // Choose and uncomment the type of OLED display used: 0.96" SSD1306 or 1.3" SH1106 
-#define SSD1306
-//#define SH1106
+//#define SSD1306
+#define SH1106
 //
 // Uncomment if two-colour OLED screens are used. Offsets some text and alternate tuner
 //#define TWOCOLOUR
@@ -42,11 +42,11 @@
 #define NOSLEEP
 //
 // When adjusting the level of effects, always start with Master level settings. Comment this line out if you like it to remember your last choice
-#define RETURN_TO_MASTER
+//#define RETURN_TO_MASTER
 //
 // Logical level of a button being pressed. If your buttons connect to GND, then comment this setting out.
 // This setting also affects Pull-up/down, and waking source settings. 
-//  #define ACTIVE_HIGH
+// #define ACTIVE_HIGH
 //
 // How many pieces do you wish?
 #define NUM_BANKS 12

@@ -99,6 +99,7 @@ OLEDDisplayUi ui(&oled);            // Create UI instance for the display (sligh
 #define HUGE_FONT Roboto_Mono_Medium_52
 
 // Globals
+bool wah = false;
 int vbat_result = 0;                            // For battery monitoring
 int express_ring_count = 0;
 int express_ring_sum = 0;
