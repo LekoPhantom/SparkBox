@@ -42,7 +42,7 @@
 #define NOSLEEP
 //
 // When adjusting the level of effects, always start with Master level settings. Comment this line out if you like it to remember your last choice
-//#define RETURN_TO_MASTER
+#define RETURN_TO_MASTER
 //
 // Logical level of a button being pressed. If your buttons connect to GND, then comment this setting out.
 // This setting also affects Pull-up/down, and waking source settings. 

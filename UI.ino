@@ -239,6 +239,8 @@ void frTuner(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
   display->setFont(MEDIUM_FONT);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
 
+  
+
   if (test_val != -1.0) {
     // Show note names
     display->drawString(display->width()/2+x,note_y+y,note_names[constrain(msg.param1+1,0,13)]); // The first and the last note_names[] are '...' such we name everything outside the bounds
@@ -251,18 +253,38 @@ void frTuner(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t
     hub_x = (tuner_width/2) - (tuner_width/2/4)*sin(radians(90-val_deg));
     hub_y = (display->height()) - (display->height()/4)*cos(radians(90-val_deg)) ;
     display->drawLine(meter_x+x, meter_y+y, hub_x+x, hub_y+y); // Draw line from hub to meter edge
+
     //InTune?
     if (meter_x >= hub_x-1 && meter_x <= hub_x+1) {
       // Fine tune signaling
+      //FastLED.clear();
       display->setColor(INVERSE);
-      display->fillRect(0,0,display->width(),STATUS_HEIGHT);  
+      display->fillRect(0,0,display->width(),STATUS_HEIGHT); 
+      DEB("We should be in tune now.");
+      //Let's try setting all LEDs to green if we are mostly in tune
       //Let's try setting all LEDs to green if we are mostly in tune
       SetupPurpleAndGreenPalette();
-      FillLEDsFromPaletteColors(1);
+      FillSomeLEDsFromPalletteColors(4,0,0);
+
+    } //Low?
+    else if(meter_x <= hub_x-1) {
+      //FastLED.clear();
+      DEB("Keep tuning");
+      MyCustomPalette();
+      FillSomeLEDsFromPalletteColors(2,0,0);
+      //FastLED.show();
+    } //High?
+    else if(meter_x >= hub_x+1){
+
+      MyCustomPalette();
+      FillSomeLEDsFromPalletteColors(4,0,2);
+
     }
   } else {
     // Nothing to show
     display->drawString(display->width()/2+x,note_y+y,"..."); // Not detected
+    FastLED.clear();
+    FastLED.show();
   }
 }
 
@@ -410,7 +432,7 @@ Computers prefer 255, so there is a mapping of cardinal points in the library.
 * There are also pre-defined colors which can be accessed here (https://github.com/FastLED/FastLED/wiki/Pixel-reference#predefined-colors-list). for those, you can just set the Pallette by calling them directly inline.
 * E.X. customPallette = CRGBPallette16(
     CRGB::Indigo
-    CRGB::Blue,
+    CRGB::Blue,                                                                                                                                         
     CRGB::Teal,
     CRGB::Black);
 **/
@@ -433,12 +455,11 @@ void MyCustomPalette()
                                    );
 }
 
-void SetupPurpleAndGreenPalette()
-{
+void SetupPurpleAndGreenPalette(){
     CRGB purple = CHSV( HUE_PURPLE, 255, 255);
     CRGB green  = CHSV( HUE_GREEN, 255, 255);
     CRGB red    =  CHSV( HUE_RED, 255, 255);
-    CRGB black  = CRGB::Black;
+    
     
     currentPalette = CRGBPalette16(
                                    green,  green,  red,  red,
@@ -447,8 +468,7 @@ void SetupPurpleAndGreenPalette()
                                    purple, purple, red,  red );
 }
 
-void FillLEDsFromPaletteColors( uint8_t colorIndex)
-{
+void FillLEDsFromPaletteColors( uint8_t colorIndex){
     uint8_t brightness = 255;
     
     for( int i = 0; i < NUM_LEDS; ++i) {
@@ -456,6 +476,17 @@ void FillLEDsFromPaletteColors( uint8_t colorIndex)
         colorIndex += 3;
     }
 }
+
+void FillSomeLEDsFromPalletteColors(uint8_t ledsToLight, uint8_t colorIndex, uint8_t startingLED){
+  FastLED.clear();
+  for( int i = startingLED; i < ledsToLight; ++i) {
+        neoLeds[i] = currentPalette[colorIndex];
+        Serial.println("the strand should be red here");
+    }
+  FastLED.show();
+}
+
+
 
 void InitialLedAnimation(){
 
@@ -1501,12 +1532,12 @@ void doExpressionPedal() {
     effect_volume = effect_volume / 64;  //<-- This is the Expression result.
     if (effect_volume > 1.0) effect_volume = 1.0;
     if (effect_volume < 0.0) effect_volume = 0.0;
-#ifdef DUMP_ON
-    DEB("Pedal data: ");
-    DEB(express_result);
-    DEB(" : ");
-    DEBUG(effect_volume);
-#endif
+    #ifdef DUMP_ON
+        DEB("Pedal data: ");
+        DEB(express_result);
+        DEB(" : ");
+        DEBUG(effect_volume);
+    #endif
     
     //let's try to commandeer the expression result
     // Send expression pedal value to Spark and App
@@ -1522,28 +1553,6 @@ void doExpressionPedal() {
       tempFrame(MODE_LEVEL, curMode, 1000);  
 
   }
-      
-
-       /**       
-    // If effect on/off
-    if (expression_target) {
-        // Send effect ON state to Spark and App only if OFF   
-        if ((effect_volume > 0.5)&&(!effectstate)) {
-          change_generic_onoff(get_effect_index(msg.str1),true);
-          DEB("Turning effect ");
-          DEB(msg.str1);
-          DEBUG(" ON via pedal");
-          effectstate = true;
-        }
-        // Send effect OFF state to Spark and App only if ON, also add hysteresis
-        else if ((effect_volume < 0.3)&&(effectstate))         {
-          change_generic_onoff(get_effect_index(msg.str1),false);
-          DEB("Turning effect ");
-          DEB(msg.str1);
-          DEBUG(" OFF via pedal");
-          effectstate = false;
-        }
-    }**/
     // Parameter change
     else{
       ///Send expression pedal value to Spark and App
@@ -1554,6 +1563,8 @@ void doExpressionPedal() {
     }
   }
 }
+
+//Original Expression
 
 /**
 void doExpressionPedal() {
@@ -1622,7 +1633,7 @@ void doExpressionPedal() {
   }
 }
 **/
-
+//end expression
 // We need to know which effects are on and which are off to draw icons
 void updateFxStatuses() {
   for (int i=0 ; i< NUM_SWITCHES; i++) {
