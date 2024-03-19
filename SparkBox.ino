@@ -120,6 +120,7 @@ s_switches SWITCHES[NUM_SWITCHES] = {
   {switchPins[1], "MOD", FX_MOD, false},
   {switchPins[2], "DELAY", FX_DELAY, false},
   {switchPins[3], "REVERB", FX_REVERB, false},
+  {switchPins[5], "COMP", FX_COMP, false},
 };
 
 //******************************************************************************************

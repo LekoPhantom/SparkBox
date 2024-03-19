@@ -124,7 +124,7 @@ const unsigned long longPressThreshold = 800;   // the threshold (in millisecond
 const unsigned long autoFireDelay = 100;        // the threshold (in milliseconds) between clicks if autofire is enabled
 bool autoFireEnabled = false;                   // should the buttons generate continious clicks when pressed longer than a longPressThreshold
 const unsigned long debounceThreshold = 20;     // the threshold (in milliseconds) for a button press to be confirmed (i.e. not "noise")
-uint8_t ActiveFlags = 0;                        // Write buttons states to one binary mask; it's global so that we can check it anywhere
+uint16_t ActiveFlags = 0;                        // Write buttons states to one binary mask; it's global so that we can check it anywhere
 
 // UI SECTION =========================================================================
 int scroller = 0;                               // Variable to keep scrolling offset 

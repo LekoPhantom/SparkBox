@@ -42,7 +42,7 @@
 #define NOSLEEP
 //
 // When adjusting the level of effects, always start with Master level settings. Comment this line out if you like it to remember your last choice
-#define RETURN_TO_MASTER
+//#define RETURN_TO_MASTER
 //
 // Logical level of a button being pressed. If your buttons connect to GND, then comment this setting out.
 // This setting also affects Pull-up/down, and waking source settings. 
@@ -52,7 +52,7 @@
 #define NUM_BANKS 12
 //
 // How many switches do we have
-#define NUM_SWITCHES 8
+#define NUM_SWITCHES 12
 //
 // Uncomment if you have leds indicating selected channel
 // #define LEDS_USED
@@ -67,7 +67,19 @@ const uint8_t ledPins[]{14,27,26,25};
 //#define ALTERNATE_CHARGE_AIN
 
 // GPIOs of the buttons in your setup in the form of switchPins[]{GPIO_for_button1, GPIO_for_button2, GPIO_for_button3, GPIO_for_button4, ... }
-const uint8_t switchPins[]{17,5,18,23,33,21,13,12};                     // Switch gpio numbers (for those who already has built a pedal with these pins)
+const uint8_t switchPins[]{
+  17,  //Button 1 case 1
+  5,   //Button 2 case 2
+  18,  //Button 3 case 4
+  23,  //Button 4 case 8
+  33,   //          case 16
+  21,  // Tuner       case 32
+  13,  // Manual Wah  case 64  
+  12,  // Compression/ Wah Toggle case 128
+  14,  // Drive case 256
+  27,  // Mod case 512
+  26,  // Delay  case 1024
+  25};           //case 2048          // Switch gpio numbers (for those who already has built a pedal with these pins)
 //Switch pins used in v.995 5,14,17,23,25
 //LED Pins used in v.995 12,13,19,22
 

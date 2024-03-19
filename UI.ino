@@ -1,4 +1,4 @@
-
+///uint32_t largeButtonId=0;
 extern ESPxWebFlMgr filemgr;  // Filemanager instance
 // Overlay static graphics ============================================================
 void screenOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
@@ -303,7 +303,7 @@ void mainIcons() {
   drawBatteryH(oled.width()-BATT_WIDTH, 0, BATT_WIDTH, STATUS_HEIGHT, batteryPercent(vbat_result), batteryCharging()); 
 }
 
-// Draw fx on/off icons (for the status line)
+/** Draw fx on/off icons (for the status line) (original)
 void fxIcons() {
   uint8_t conn_icons = inWifi ? 1 : 2;
   // Drive icon    
@@ -315,17 +315,31 @@ void fxIcons() {
   // Reverb icon
   drawStatusIcon(rv_bits, rv_width, STATUS_HEIGHT, conn_icons*(CONN_ICON_WIDTH+1)+1+(FX_ICON_WIDTH+1)*3, 0, FX_ICON_WIDTH,  STATUS_HEIGHT, presets[CUR_EDITING].effects[FX_REVERB].OnOff);
 }
+*/
+void fxIcons() {
+  uint8_t conn_icons = inWifi ? 1 : 2;
+  // Drive icon    
+  drawStatusIcon(comp_bits, comp_width, STATUS_HEIGHT, conn_icons*(CONN_ICON_WIDTH+1)+1,                     0, FX_ICON_WIDTH,  STATUS_HEIGHT, presets[CUR_EDITING].effects[FX_COMP].OnOff);
+  // Mod icon
+  drawStatusIcon(dr_bits, dr_width, STATUS_HEIGHT, conn_icons*(CONN_ICON_WIDTH+1)+1+FX_ICON_WIDTH+1,     0, FX_ICON_WIDTH,  STATUS_HEIGHT, presets[CUR_EDITING].effects[FX_DRIVE].OnOff);
+  // Delay icon
+  drawStatusIcon(md_bits, md_width, STATUS_HEIGHT, conn_icons*(CONN_ICON_WIDTH+1)+1+(FX_ICON_WIDTH+1)*2, 0, FX_ICON_WIDTH,  STATUS_HEIGHT, presets[CUR_EDITING].effects[FX_MOD].OnOff);
+  // Reverb icon
+  drawStatusIcon(dy_bits, dy_width, STATUS_HEIGHT, conn_icons*(CONN_ICON_WIDTH+1)+1+(FX_ICON_WIDTH+1)*3, 0, FX_ICON_WIDTH,  STATUS_HEIGHT, presets[CUR_EDITING].effects[FX_DELAY].OnOff);
+}
 
 // Draw the big on/off icons for the EFFECTS mode
 void fxHugeIcons(int x, int y) {
+    // Comp icon    
+  drawTextIcon("Cmp", x+0,  y+18, 30, 25, presets[CUR_EDITING].effects[FX_COMP].OnOff, MEDIUM_FONT);
   // Drive icon    
-  drawTextIcon("Dr", x+0,  y+18, 30, 32, presets[CUR_EDITING].effects[FX_DRIVE].OnOff, MEDIUM_FONT);
+  drawTextIcon("Dr", x+25,  y+18, 30, 25, presets[CUR_EDITING].effects[FX_DRIVE].OnOff, MEDIUM_FONT);
   // Mod icon
-  drawTextIcon("Md", x+32, y+18, 30, 32, presets[CUR_EDITING].effects[FX_MOD].OnOff, MEDIUM_FONT);
+  drawTextIcon("Md", x+50, y+18, 30, 25, presets[CUR_EDITING].effects[FX_MOD].OnOff, MEDIUM_FONT);
   // Delay icon
-  drawTextIcon("Dy", x+64, y+18, 30, 32, presets[CUR_EDITING].effects[FX_DELAY].OnOff, MEDIUM_FONT);
+  drawTextIcon("Dy", x+75, y+18, 30, 25, presets[CUR_EDITING].effects[FX_DELAY].OnOff, MEDIUM_FONT);
   // Reverb icon
-  drawTextIcon("Rv", x+96, y+18, 30, 32, presets[CUR_EDITING].effects[FX_REVERB].OnOff, MEDIUM_FONT);
+  drawTextIcon("Rv", x+100, y+18, 30, 25, presets[CUR_EDITING].effects[FX_REVERB].OnOff, MEDIUM_FONT);
 }
 
 void hintIcons(int x, int y) {
@@ -450,7 +464,7 @@ void MyCustomPalette()
     currentPalette = CRGBPalette16(
                                    red,  yellow,  aqua,  purple,
                                     red,  yellow,  aqua,  purple,
-                                     red,  yellow,  aqua,  purple,
+                                      red,  yellow,  aqua,  purple,
                                       red,  yellow,  aqua,  purple 
                                    );
 }
@@ -668,11 +682,12 @@ void doPushButtons(void)
   static bool longPressFired = false;                     // indicates if the long-press event has fired
   bool AnylongPressActive = false;                        // OR of any longPressActive states
   bool AllPressActive = true;                             // AND of any longPressActive states
-  uint8_t ClickFlags = 0;                                 // Write buttons states to one binary mask variable
-  uint8_t LongPressFlags = 0;                             // Write buttons states to one binary mask variable
-  static uint8_t zeroCounter = 0;
-  static uint8_t oldActiveFlags = 0;
-  static uint8_t maxFlags = 0;
+  uint16_t ClickFlags = 0;                                 // Write buttons states to one binary mask variable
+  uint16_t LongPressFlags = 0;                             // Write buttons states to one binary mask variable
+  static uint16_t zeroCounter = 0;
+  static uint16_t oldActiveFlags = 0;
+  static uint16_t maxFlags = 0;
+  
   ActiveFlags = 0;
   // Debounce and long press code
   for (int i = 0; i < NUM_SWITCHES; i++) {
@@ -714,7 +729,9 @@ void doPushButtons(void)
           // if the button press duration exceeds our bounce threshold, then we register a tap
           if (buttonPressDuration[i] > debounceThreshold){
             buttonClick[i] = true;
-            DEBUG("Tap " + (String)(1<<i));
+           /// DEBUG("Tap " + (String)(1<<i));
+            ///largeButtonId= (uint32_t)(1<<i);
+            ///DEBUG("button id is " +(String)(largeButto
             onTap(1<<i);
           }
         }
@@ -724,9 +741,10 @@ void doPushButtons(void)
       }
       
     }  // The button either hasn't been pressed, or has just been released
-    LongPressFlags += (static_cast <uint8_t> (longPressActive[i])) << i;
-    ActiveFlags += (static_cast <uint8_t> (buttonActive[i])) << i;
-    ClickFlags += (static_cast <uint8_t> (buttonClick[i])) << i;
+    LongPressFlags += (static_cast <uint16_t> (longPressActive[i])) << i;
+    
+    ActiveFlags += (static_cast <uint16_t> (buttonActive[i])) << i;
+    ClickFlags      += (static_cast <uint16_t> (buttonClick[i])) << i;
     
   }  // Debounce and long press code loop
 
@@ -754,11 +772,12 @@ void doPushButtons(void)
       onAutoClick(LongPressFlags);  // function to execute on Long Press event 
     }
   }
-  if (ClickFlags > 0 && ActiveFlags ==0){
+  if (ClickFlags > 0 && ActiveFlags ==  0){
     DEBUG("Click " + (String)(maxFlags));
     onClick(maxFlags);      // This will give you multi-button clicks
-    //  onClick(clickFlags);  // This will give only single button at a time to be clicked
+    //onClick(clickFlags);  // This will give only single button at a time to be clicked
   }
+  
 }
 
 uint8_t expressionParam = 5;
@@ -766,10 +785,14 @@ void SetButton(){
   expressionParam = Serial.parseInt();
 }
 
+
+
+
 // buttonMask is binary mask that has 1 in Nth position, if Nth button is active, 
 // say 0b00000100 (decimal 4) means that your 3rd button fired this event, multiple buttons allowed
-void onClick(uint8_t buttonMask) {
+void onClick(uint16_t buttonMask) {
   // In Preset mode, use the four buttons to select the four HW presets
+  DEB("The incoming mask is..." +(String)(buttonMask));
   uint8_t buttonId;
   if (isTunerMode) {
     // bail out
@@ -787,7 +810,7 @@ void onClick(uint8_t buttonMask) {
       //case 16:// ...
       //case 32:// ...
       //case 64:// any single button click
-      case 256:// ...
+      case 2048:// should be one level higher than last button?...
         buttonId = log(buttonMask)/log(2); 
         display_preset_num = buttonId;
         change_hardware_preset(display_preset_num);
@@ -801,13 +824,12 @@ void onClick(uint8_t buttonMask) {
         .fxOnOff);
         setting_modified = true;**/
         // Overdrive toggle
-        //SWITCHES[0].fxOnOff = !SWITCHES[0].fxOnOff; //This should be drive...
-        //change_generic_onoff(SWITCHES[0].fxSlotNumber, SWITCHES[0]
-        //.fxOnOff);
-        //setting_modified = true;
-        
-        change_comp_param(0, 0.00);
-        DEB("We should have just switched to auto wah...");
+        SWITCHES[0].fxOnOff = !SWITCHES[0].fxOnOff; //This should be drive...
+        change_generic_onoff(SWITCHES[0].fxSlotNumber, SWITCHES[0]
+        .fxOnOff);
+        setting_modified = true;
+        change_comp_toggle();
+        DEB("We should have just toggled Drive...");
         //change_comp_toggle();
 
            break;
@@ -818,30 +840,51 @@ void onClick(uint8_t buttonMask) {
       
         break;
 
-      case 64:
+      case 64:  //This sets the device to wah manually
         wah = true;
         change_comp_param(0, 0.90);
         DEB("We should be wahing manually...");
         break;
 
-        /**19:40:44.148 -> Change parameter 
-19:40:44.181 -> Message: 328
-19:40:44.181 -> Message: 104
-**/
-        break;
-      case 128://If We Want button 9
-              // Overdrive toggle
-        //SWITCHES[0].fxOnOff = !SWITCHES[0].fxOnOff; //This should be drive...
-        //change_generic_onoff(SWITCHES[0].fxSlotNumber, SWITCHES[0]
-        //.fxOnOff);
-        //setting_modified = true;
-        //change_comp_param(0, 0.00); //gets to auto wah
-        wah=false;
-        DEB("We should be adjusting Volume or parameter");
-          
-          
+        /**
+        The following are the optional fx toggles...
+          change_noisegate_toggle();
+          change_drive_toggle();
+          change_comp_toggle();
+          change_amp_toggle();
+          change_mod_toggle();
+          change_delay_toggle();
+          change_reverb_toggle();
+        **/
+      case 128: //button 10
+        // comp/wah toggle
+        change_comp_toggle();
+        setting_modified = true;
+        DEB("We should have just toggled wah/comp");
         break;
       
+      case 256://If We Want button 9
+        change_mod_toggle();
+        setting_modified = true;
+        DEB("We should have just toggled the mod...");
+        break;
+
+
+      case 512: //button 11
+        // mod toggle
+        change_drive_toggle();
+        setting_modified = true;
+        DEB("We should have just toggled the drive...");
+        break;
+
+      case 1024: //button 12
+        DEB("We should have just toggled the delay...");
+        change_delay_toggle();
+        setting_modified = true;
+        
+        break;
+
+        
       default:
         //no action yet
         break;        
@@ -853,6 +896,11 @@ void onClick(uint8_t buttonMask) {
         SWITCHES[i].fxOnOff = !SWITCHES[i].fxOnOff;
         change_generic_onoff(SWITCHES[i].fxSlotNumber, SWITCHES[i].fxOnOff);
         setting_modified = true;
+        DEB("The button pressed is " + (String)(i));
+        if (i==5){
+          change_comp_toggle();
+          setting_modified = true;
+        }
       }
     }
   } else if (curMode == MODE_LEVEL && (buttonMask==2 || buttonMask==8)) {
@@ -941,7 +989,7 @@ void onLongPress(uint8_t buttonMask) {
             curParam = knobs_order[curKnob].fxNumber;
             fxCaption = spark_knobs[curFx][curParam];
             level = presets[CUR_EDITING].effects[curFx].Parameters[curParam] * MAX_LEVEL;
-            tempFrame(MODE_LEVEL, curMode, FRAME_TIMEOUT); // Master level adj
+            //tempFrame(MODE_LEVEL, curMode, FRAME_TIMEOUT); // Master level adj
           } else {
             tempUI=false;
             change_custom_preset(&presets[CUR_EDITING], display_preset_num);
@@ -970,7 +1018,7 @@ void onAutoClick(uint8_t buttonMask) {
 }
 
 // The event is generated right after debouncing
-void onTap(uint8_t buttonMask) {
+void onTap(uint16_t buttonMask) {
   //DEBUG("TAP " + (String)(buttonMask));
   //timeToGoBack = millis() + actual_timeout;  
 }
